@@ -29,6 +29,9 @@ seed-fresh:
 	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) up
 	@go run ./cmd/migrate/seed/main.go
 
+.PHONY: gen-docs
+gen-docs:
+	@swag init -g main.go -d cmd/api,internal/store && swag fmt
 # Agar argument dinamis (seperti nama migrasi) tidak dianggap sebagai target Make
 %:
 	@:
