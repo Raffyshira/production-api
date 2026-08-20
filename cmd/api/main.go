@@ -1,12 +1,13 @@
 package main
 
 import (
-	"log"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/raffyshira/project-rest-api/internal/db"
 	"github.com/raffyshira/project-rest-api/internal/env"
 	"github.com/raffyshira/project-rest-api/internal/store"
+	"go.uber.org/zap"
 )
 
 const version = "0.0.1"
@@ -39,7 +40,14 @@ func main() {
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
 		env: env.GetString("ENV", "development"),
+		mail: mailConfig{
+			exp: time.Hour * 24 * 3,
+		},
 	}
+
+	// logger
+	logger := zap.Must(zap.NewProduction()).Sugar()
+	defer logger.Sync()
 
 	db, err := db.New(
 		cfg.db.addr,
@@ -48,19 +56,20 @@ func main() {
 		cfg.db.maxIdleTime,
 	)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		logger.Fatal(err)
 	}
 	defer db.Close()
-	log.Println("Database connection pool established")
+	logger.Info("Database connection pool established")
 
 	store := store.NewStorage(db)
 
 	app := &application{
 		config: cfg,
 		store:  store,
+		logger: logger,
 	}
 
 	r := app.mount()
 
-	log.Fatal(app.run(r))
+	logger.Fatal(app.run(r))
 }
