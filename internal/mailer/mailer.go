@@ -3,8 +3,8 @@ package mailer
 import "embed"
 
 const (
-	FromName            = "SocialNetwork"
-	maxRetires          = 3
+	FromName = "SocialNetwork"
+	// maxRetires          = 3
 	UserWelcomeTemplate = "user_invitation.tmpl"
 )
 
