@@ -46,6 +46,10 @@ func (s *CommentStore) GetByPostID(ctx context.Context, postID int64) ([]Comment
 		comments = append(comments, c)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return comments, nil
 }
 

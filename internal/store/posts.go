@@ -78,6 +78,10 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64, fq PaginatedF
 
 		feed = append(feed, p)
 	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return feed, nil
 }
 
