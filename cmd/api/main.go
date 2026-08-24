@@ -8,7 +8,10 @@ import (
 	"github.com/raffyshira/project-rest-api/internal/db"
 	"github.com/raffyshira/project-rest-api/internal/env"
 	"github.com/raffyshira/project-rest-api/internal/mailer"
+	"github.com/raffyshira/project-rest-api/internal/service"
 	"github.com/raffyshira/project-rest-api/internal/store"
+	"github.com/raffyshira/project-rest-api/internal/store/cache"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -41,6 +44,12 @@ func main() {
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
+		},
+		redisCfg: redisConfig{
+			addr:    env.GetString("REDIS_ADDR", "localhost:6379"),
+			pw:      env.GetString("REDIS_PASSWORD", ""),
+			db:      env.GetInt("REDIS_DB", 0),
+			enabled: env.GetBool("REDIS_ENABLED", true),
 		},
 		env: env.GetString("ENV", "development"),
 		mail: mailConfig{
@@ -79,7 +88,17 @@ func main() {
 	defer db.Close()
 	logger.Info("Database connection pool established")
 
+	// cache
+	var rdb *redis.Client
+	if cfg.redisCfg.enabled {
+		rdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
+		logger.Info("redis cache connection established")
+
+		defer rdb.Close()
+	}
+
 	store := store.NewStorage(db)
+	cacheStorage := cache.NewRedisStorage(rdb)
 
 	mailer := mailer.NewResendMailer(cfg.mail.resend.apiKey, cfg.mail.fromEmail)
 
@@ -89,12 +108,26 @@ func main() {
 		cfg.auth.token.iss,
 	)
 
+	svcDependencies := service.ServiceDependencies{
+		Store:  store,
+		Mailer: mailer,
+		Logger: logger,
+		Config: service.Config{
+			Env:         cfg.env,
+			FrontendURL: cfg.frontendURL,
+			MailExp:     cfg.mail.exp,
+		},
+	}
+	services := service.NewServices(svcDependencies)
+
 	app := &application{
 		config:        cfg,
 		store:         store,
+		cacheStorage:  cacheStorage,
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
+		services:      services,
 	}
 
 	r := app.mount()

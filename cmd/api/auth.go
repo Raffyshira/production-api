@@ -1,15 +1,10 @@
 package main
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
-	"github.com/raffyshira/project-rest-api/internal/mailer"
 	"github.com/raffyshira/project-rest-api/internal/store"
 )
 
@@ -48,32 +43,10 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	user := &store.User{
-		Username: payload.Username,
-		Email:    payload.Email,
-		RoleID:   1,
-	}
-
-	// hash the user password
-	if err := user.Password.Set(payload.Password); err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
-
-	ctx := r.Context()
-
-	plainToken := uuid.New().String()
-
-	// hash the token for storage but keep the plain token for email
-	hash := sha256.Sum256([]byte(plainToken))
-	hashToken := hex.EncodeToString(hash[:])
-
-	err := app.store.Users.CreateAndInvite(ctx, user, hashToken, app.config.mail.exp)
+	user, plainToken, err := app.services.Auth.RegisterUser(r.Context(), payload.Username, payload.Email, payload.Password)
 	if err != nil {
 		switch err {
-		case store.ErrDuplicateEmail:
-			app.badRequestResponse(w, r, err)
-		case store.ErrDuplicateUsername:
+		case store.ErrDuplicateEmail, store.ErrDuplicateUsername:
 			app.badRequestResponse(w, r, err)
 		default:
 			app.internalServerError(w, r, err)
@@ -85,32 +58,6 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		User:  user,
 		Token: plainToken,
 	}
-
-	activationURL := fmt.Sprintf("%s/confirm/%s", app.config.frontendURL, plainToken)
-
-	isProdEnv := app.config.env == "production"
-	vars := struct {
-		Username      string
-		ActivationURL string
-	}{
-		Username:      user.Username,
-		ActivationURL: activationURL,
-	}
-
-	// send mail
-	status, err := app.mailer.Send(mailer.UserWelcomeTemplate, user.Username, user.Email, vars, !isProdEnv)
-	if err != nil {
-		app.logger.Errorw("error sending welcome email", "error", err)
-
-		// rollback user creation if email fails (SAGA pattern)
-		if err := app.store.Users.Delete(ctx, user.ID); err != nil {
-			app.logger.Errorw("error deleting user", "error", err)
-		}
-		app.internalServerError(w, r, err)
-		return
-	}
-
-	app.logger.Infow("Email sent", "status code", status)
 
 	if err := app.jsonResponse(w, http.StatusCreated, userWithToken); err != nil {
 		app.internalServerError(w, r, err)

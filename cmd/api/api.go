@@ -11,7 +11,9 @@ import (
 	"github.com/raffyshira/project-rest-api/docs"
 	"github.com/raffyshira/project-rest-api/internal/auth"
 	"github.com/raffyshira/project-rest-api/internal/mailer"
+	"github.com/raffyshira/project-rest-api/internal/service"
 	"github.com/raffyshira/project-rest-api/internal/store"
+	"github.com/raffyshira/project-rest-api/internal/store/cache"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
 )
@@ -19,9 +21,11 @@ import (
 type application struct {
 	config        config
 	store         store.Storage
+	cacheStorage  cache.Storage
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
+	services      service.Services
 }
 
 type config struct {
@@ -32,8 +36,15 @@ type config struct {
 	mail        mailConfig
 	frontendURL string
 	auth        authConfig
+	redisCfg    redisConfig
 }
 
+type redisConfig struct {
+	addr    string
+	pw      string
+	db      int
+	enabled bool
+}
 type authConfig struct {
 	basic basicConfig
 	token tokenConfig

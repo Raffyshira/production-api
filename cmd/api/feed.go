@@ -48,7 +48,7 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 
 	ctx := r.Context()
 
-	feed, err := app.store.Posts.GetUserFeed(ctx, int64(341), fq)
+	feed, err := app.services.Posts.GetUserFeed(ctx, int64(341), fq)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
