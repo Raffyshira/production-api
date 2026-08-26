@@ -33,36 +33,33 @@ func NewAuthService(store store.Storage, mailer mailer.Client, logger *zap.Sugar
 }
 
 func (s *authService) RegisterUser(ctx context.Context, username, email, plainPassword string) (*store.User, string, error) {
-	// 1. Dapatkan Role ID
-	role, err := s.store.Roles.GetByName(ctx, "user")
-	if err != nil {
-		return nil, "", err
-	}
 
-	// 2. Buat objek User
+	// 1. Buat objek User
 	user := &store.User{
 		Username: username,
 		Email:    email,
-		RoleID:   role.ID,
+		Role: store.Role{
+			Name: "user",
+		},
 	}
 
-	// 3. Hash Password
+	// 2. Hash Password
 	if err := user.Password.Set(plainPassword); err != nil {
 		return nil, "", err
 	}
 
-	// 4. Generate Token Aktivasi
+	// 3. Generate Token Aktivasi
 	plainToken := uuid.New().String()
 	hash := sha256.Sum256([]byte(plainToken))
 	hashToken := hex.EncodeToString(hash[:])
 
-	// 5. Simpan User dan Token ke Database
-	err = s.store.Users.CreateAndInvite(ctx, user, hashToken, s.config.MailExp)
+	// 4. Simpan User dan Token ke Database
+	err := s.store.Users.CreateAndInvite(ctx, user, hashToken, s.config.MailExp)
 	if err != nil {
 		return nil, "", err
 	}
 
-	// 6. Siapkan data email
+	// 5. Siapkan data email
 	activationURL := fmt.Sprintf("%s/confirm/%s", s.config.FrontendURL, plainToken)
 	isProdEnv := s.config.Env == "production"
 	vars := struct {
