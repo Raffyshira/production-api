@@ -26,3 +26,7 @@ func (s *MockUserStore) Set(ctx context.Context, user *store.User) error {
 	args := s.Called(user)
 	return args.Error(0)
 }
+
+func (m *MockUserStore) Delete(ctx context.Context, userID int64) {
+	m.Called(userID)
+}
