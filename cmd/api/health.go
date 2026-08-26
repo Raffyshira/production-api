@@ -1,6 +1,8 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+)
 
 // healthcheckHandler godoc
 //
@@ -11,6 +13,9 @@ import "net/http"
 //	@Success		200	{object}	string	"ok"
 //	@Router			/health [get]
 func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	// testing graceful shutdown
+	// time.Sleep(4 * time.Second)
+
 	data := map[string]string{
 		"status":  "ok",
 		"env":     app.config.env,
