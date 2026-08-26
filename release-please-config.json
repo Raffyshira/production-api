@@ -1,0 +1,10 @@
+{
+  "release-type": "simple",
+  "extra-files": [
+    {
+      "type": "generic",
+      "path": "cmd/api/main.go",
+      "glob": false
+    }
+  ]
+}

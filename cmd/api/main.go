@@ -18,7 +18,10 @@ import (
 	"go.uber.org/zap"
 )
 
+// x-release-please-start-version
 const version = "0.0.1"
+
+// x-release-please-end
 
 //	@title			SocialNetwork API
 //	@description	API for SocialNetwork, a social network for gohpers
