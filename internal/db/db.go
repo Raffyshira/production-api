@@ -3,14 +3,13 @@ package db
 import (
 	"context"
 	"database/sql"
-	"log"
 	"time"
 )
 
 func New(addr string, maxOpenConns, maxIdleConns int, maxIdleTime string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", addr)
 	if err != nil {
-		log.Printf("erroradsd", err)
+
 		return nil, err
 	}
 
