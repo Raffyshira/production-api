@@ -16,6 +16,7 @@ import (
 	"github.com/raffyshira/project-rest-api/docs"
 	"github.com/raffyshira/project-rest-api/internal/auth"
 	"github.com/raffyshira/project-rest-api/internal/mailer"
+	"github.com/raffyshira/project-rest-api/internal/ratelimiter"
 	"github.com/raffyshira/project-rest-api/internal/service"
 	"github.com/raffyshira/project-rest-api/internal/store"
 	"github.com/raffyshira/project-rest-api/internal/store/cache"
@@ -31,6 +32,7 @@ type application struct {
 	mailer        mailer.Client
 	authenticator auth.Authenticator
 	services      service.Services
+	rateLimiter   ratelimiter.Limiter
 }
 
 type config struct {
@@ -42,6 +44,7 @@ type config struct {
 	frontendURL string
 	auth        authConfig
 	redisCfg    redisConfig
+	rateLimiter ratelimiter.Config
 }
 
 type redisConfig struct {
@@ -99,6 +102,7 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(app.RateLimiterMiddleware)
 
 	// Set a timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further

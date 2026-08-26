@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/raffyshira/project-rest-api/internal/auth"
+	"github.com/raffyshira/project-rest-api/internal/ratelimiter"
 	"github.com/raffyshira/project-rest-api/internal/service"
 	"github.com/raffyshira/project-rest-api/internal/store"
 	"github.com/raffyshira/project-rest-api/internal/store/cache"
@@ -23,6 +24,12 @@ func newTestApplication(t *testing.T, cfg config) *application {
 
 	testAuth := &auth.TestAuthenticator{}
 
+	// rate limiter
+	rateLimiter := ratelimiter.NewFixedWindowRateLimiter(
+		cfg.rateLimiter.RequestsPerTimeFrame,
+		cfg.rateLimiter.TimeFrame,
+	)
+
 	services := service.NewServices(service.ServiceDependencies{
 		Store: mockStore,
 	})
@@ -34,6 +41,7 @@ func newTestApplication(t *testing.T, cfg config) *application {
 		cacheStorage:  mockCacheStore,
 		authenticator: testAuth,
 		config:        cfg,
+		rateLimiter:   rateLimiter,
 	}
 }
 

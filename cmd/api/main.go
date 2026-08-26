@@ -8,6 +8,7 @@ import (
 	"github.com/raffyshira/project-rest-api/internal/db"
 	"github.com/raffyshira/project-rest-api/internal/env"
 	"github.com/raffyshira/project-rest-api/internal/mailer"
+	"github.com/raffyshira/project-rest-api/internal/ratelimiter"
 	"github.com/raffyshira/project-rest-api/internal/service"
 	"github.com/raffyshira/project-rest-api/internal/store"
 	"github.com/raffyshira/project-rest-api/internal/store/cache"
@@ -70,6 +71,11 @@ func main() {
 				iss:    "socialnetwork",
 			},
 		},
+		rateLimiter: ratelimiter.Config{
+			RequestsPerTimeFrame: env.GetInt("RATELIMITER_REQUESTS_COUNT", 20),
+			TimeFrame:            time.Second * 5,
+			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
+		},
 	}
 
 	// logger
@@ -96,6 +102,12 @@ func main() {
 
 		defer rdb.Close()
 	}
+
+	// rate limiter
+	rateLimiter := ratelimiter.NewFixedWindowRateLimiter(
+		cfg.rateLimiter.RequestsPerTimeFrame,
+		cfg.rateLimiter.TimeFrame,
+	)
 
 	store := store.NewStorage(db)
 	cacheStorage := cache.NewRedisStorage(rdb)
@@ -128,6 +140,7 @@ func main() {
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
 		services:      services,
+		rateLimiter:   rateLimiter,
 	}
 
 	r := app.mount()
