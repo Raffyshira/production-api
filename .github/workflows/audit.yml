@@ -1,0 +1,60 @@
+name: Audit
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  test:
+    name: Test & Build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: socialnetwork
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U myuser -d socialnetwork"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:6.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests
+        env:
+          DB_ADDR: postgres://myuser:testpassword@localhost:5432/socialnetwork?sslmode=disable
+          REDIS_ADDR: localhost:6379
+          REDIS_ENABLED: false
+          AUTH_TOKEN_SECRET: test-secret
+        run: go test -v -race -count=1 ./...
+
+      - name: Build
+        run: go build -o /dev/null ./cmd/api
