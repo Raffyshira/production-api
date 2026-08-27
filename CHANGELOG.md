@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/Raffyshira/production-api/compare/v1.0.0...v1.1.0) (2026-08-27)
+
+
+### Features
+
+* dockerfile ([84e0701](https://github.com/Raffyshira/production-api/commit/84e07016c6b1133ca9b80f2fd96b8914d9d5cfbc))
+
 ## 1.0.0 (2026-08-26)
 
 
