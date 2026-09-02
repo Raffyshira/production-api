@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router";
-import { API_URL } from "./App";
+import { API_URL } from "@/lib/api";
 import { Button } from "./components/ui/button";
 import { cn } from "./lib/utils";
 

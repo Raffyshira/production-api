@@ -60,3 +60,54 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 }
+
+// getExploreFeedHandler godoc
+//
+//	@Summary		Fetches the explore feed
+//	@Description	Fetches posts from users the current user does not follow
+//	@Tags			feed
+//	@Accept			json
+//	@Produce		json
+//	@Param			limit	query		int		false	"Limit"
+//	@Param			offset	query		int		false	"Offset"
+//	@Param			sort	query		string	false	"Sort"
+//	@Param			search	query		string	false	"Search"
+//	@Success		200		{object}	[]store.PostWithMetadata
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/users/explore [get]
+func (app *application) getExploreFeedHandler(w http.ResponseWriter, r *http.Request) {
+	fq := store.PaginatedFeedQuery{
+		Limit:  20,
+		Offset: 0,
+		Sort:   "desc",
+		Tags:   []string{},
+		Search: "",
+	}
+
+	fq, err := fq.Parse(r)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(fq); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+	user := getUserFromContext(r)
+
+	feed, err := app.services.Posts.GetExploreFeed(ctx, user.ID, fq)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, feed); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}

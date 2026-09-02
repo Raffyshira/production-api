@@ -13,6 +13,7 @@ type PostService interface {
 	Update(context.Context, *store.Post) error
 	GetCommentsByID(context.Context, int64) ([]store.Comment, error)
 	GetUserFeed(context.Context, int64, store.PaginatedFeedQuery) ([]store.PostWithMetadata, error)
+	GetExploreFeed(context.Context, int64, store.PaginatedFeedQuery) ([]store.PostWithMetadata, error)
 }
 
 type postService struct {
@@ -48,6 +49,11 @@ func (p *postService) GetCommentsByID(ctx context.Context, postID int64) ([]stor
 // GetUserFeed implements [PostService].
 func (p *postService) GetUserFeed(ctx context.Context, userID int64, query store.PaginatedFeedQuery) ([]store.PostWithMetadata, error) {
 	return p.store.Posts.GetUserFeed(ctx, userID, query)
+}
+
+// GetExploreFeed implements [PostService].
+func (p *postService) GetExploreFeed(ctx context.Context, userID int64, query store.PaginatedFeedQuery) ([]store.PostWithMetadata, error) {
+	return p.store.Posts.GetExploreFeed(ctx, userID, query)
 }
 
 // Update implements [PostService].

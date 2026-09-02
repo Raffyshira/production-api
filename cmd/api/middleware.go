@@ -143,7 +143,7 @@ func (app *application) getUser(ctx context.Context, userID int64) (*store.User,
 
 	if user == nil {
 		app.logger.Info("user not found in cache")
-		user, err := app.services.Users.GetUserByID(ctx, userID)
+		user, err = app.services.Users.GetUserByID(ctx, userID)
 		if err != nil {
 			return nil, err
 		}
