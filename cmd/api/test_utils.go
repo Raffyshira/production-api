@@ -7,7 +7,7 @@ import (
 
 	"github.com/raffyshira/project-rest-api/internal/auth"
 	"github.com/raffyshira/project-rest-api/internal/ratelimiter"
-	"github.com/raffyshira/project-rest-api/internal/service"
+	service "github.com/raffyshira/project-rest-api/internal/services"
 	"github.com/raffyshira/project-rest-api/internal/store"
 	"github.com/raffyshira/project-rest-api/internal/store/cache"
 	"go.uber.org/zap"

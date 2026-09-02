@@ -11,7 +11,7 @@ import (
 	"github.com/raffyshira/project-rest-api/internal/env"
 	"github.com/raffyshira/project-rest-api/internal/mailer"
 	"github.com/raffyshira/project-rest-api/internal/ratelimiter"
-	"github.com/raffyshira/project-rest-api/internal/service"
+	service "github.com/raffyshira/project-rest-api/internal/services"
 	"github.com/raffyshira/project-rest-api/internal/store"
 	"github.com/raffyshira/project-rest-api/internal/store/cache"
 	"github.com/redis/go-redis/v9"

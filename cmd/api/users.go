@@ -105,7 +105,7 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 //	@Security		ApiKeyAuth
 //	@Router			/users/{userID}/unfollow [put]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
-	unfollowedUser := getUserFromContext(r)
+	followerUser := getUserFromContext(r)
 
 	unfollowedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 
@@ -115,7 +115,7 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	ctx := r.Context()
-	if err := app.services.Users.UnfollowUser(ctx, unfollowedUser.ID, unfollowedID); err != nil {
+	if err := app.services.Users.UnfollowUser(ctx, unfollowedID, followerUser.ID); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

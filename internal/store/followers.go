@@ -18,7 +18,7 @@ type FollowerStore struct {
 	db *sql.DB
 }
 
-func (s *FollowerStore) Follow(ctx context.Context, followerID, userID int64) error {
+func (s *FollowerStore) Follow(ctx context.Context, userID, followerID int64) error {
 	query := `
 		INSERT INTO followers (user_id, follower_id) VALUES ($1, $2)
 	`
@@ -26,7 +26,7 @@ func (s *FollowerStore) Follow(ctx context.Context, followerID, userID int64) er
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	_, err := s.db.ExecContext(ctx, query, followerID, userID)
+	_, err := s.db.ExecContext(ctx, query, userID, followerID)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
 			return ErrConflict
@@ -36,7 +36,7 @@ func (s *FollowerStore) Follow(ctx context.Context, followerID, userID int64) er
 	return nil
 }
 
-func (s *FollowerStore) Unfollow(ctx context.Context, followerID, userID int64) error {
+func (s *FollowerStore) Unfollow(ctx context.Context, userID, followerID int64) error {
 	query := `
 		DELETE FROM followers 
 		WHERE user_id = $1 AND follower_id = $2
@@ -45,6 +45,6 @@ func (s *FollowerStore) Unfollow(ctx context.Context, followerID, userID int64) 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	_, err := s.db.ExecContext(ctx, query, followerID, userID)
+	_, err := s.db.ExecContext(ctx, query, userID, followerID)
 	return err
 }

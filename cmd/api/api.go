@@ -19,7 +19,7 @@ import (
 	"github.com/raffyshira/project-rest-api/internal/env"
 	"github.com/raffyshira/project-rest-api/internal/mailer"
 	"github.com/raffyshira/project-rest-api/internal/ratelimiter"
-	"github.com/raffyshira/project-rest-api/internal/service"
+	service "github.com/raffyshira/project-rest-api/internal/services"
 	"github.com/raffyshira/project-rest-api/internal/store"
 	"github.com/raffyshira/project-rest-api/internal/store/cache"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -140,8 +140,8 @@ func (app *application) mount() http.Handler {
 				r.Use(app.AuthTokenMiddleware)
 
 				r.Get("/", app.getUserHandler)
-				r.Put("/", app.followUserHandler)
-				r.Put("/", app.unfollowUserHandler)
+				r.Put("/follow", app.followUserHandler)
+				r.Put("/unfollow", app.unfollowUserHandler)
 			})
 
 			r.Group(func(r chi.Router) {
