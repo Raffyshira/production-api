@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.2.0](https://github.com/Raffyshira/production-api/compare/v1.1.0...v1.2.0) (2026-09-02)
+
+
+### Features
+
+* add explore feed ([f26278d](https://github.com/Raffyshira/production-api/commit/f26278d2aa3216ffb26ce7fc1c570be904d5c2d4))
+* complete web ui ([34918d4](https://github.com/Raffyshira/production-api/commit/34918d4886eb7ec3445e0699eb06765f57372db0))
+* complete web UI overhaul and introduce explore feed ([c0887cf](https://github.com/Raffyshira/production-api/commit/c0887cf04644c51b24ece2a37c6b3cb9be7eb19b))
+
+
+### Bug Fixes
+
+* allowed origins & bugs in middleware ([2d28637](https://github.com/Raffyshira/production-api/commit/2d2863736c46d1df06d91d62cb5cd1b6777cab07))
+* conditional use rate limiter ([8871477](https://github.com/Raffyshira/production-api/commit/88714775598b595130c7474d3d5eb2571158fade))
+* feed query ([f97aa42](https://github.com/Raffyshira/production-api/commit/f97aa42fb3a2b80b5534f2c3ed511dedcf011772))
+* follow query ([c8c1bcc](https://github.com/Raffyshira/production-api/commit/c8c1bccde1c78266e5303855185436c7b8ef91f2))
+* posts feed query & follow user & rename services folder ([f16777f](https://github.com/Raffyshira/production-api/commit/f16777fb762d2b88658f56e38c7d30d831111023))
+* tags filtering ([951e160](https://github.com/Raffyshira/production-api/commit/951e160593576753a410e2ed12d59f146a7cc7c9))
+* validate user password during login token creation ([fc489b0](https://github.com/Raffyshira/production-api/commit/fc489b0d322574d137328cd6d83fbe1e4e098be9))
+
 ## [1.1.0](https://github.com/Raffyshira/production-api/compare/v1.0.0...v1.1.0) (2026-08-27)
 
 
