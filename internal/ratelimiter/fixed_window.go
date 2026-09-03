@@ -1,48 +1,54 @@
 package ratelimiter
 
 import (
+	"context"
 	"sync"
 	"time"
 )
 
+type clientWindow struct {
+	count     int
+	lastReset time.Time
+}
+
 type FixedWindowRateLimiter struct {
-	sync.RWMutex
-	clients map[string]int
+	sync.Mutex
+	clients map[string]*clientWindow
 	limit   int
 	window  time.Duration
 }
 
 func NewFixedWindowRateLimiter(limit int, window time.Duration) *FixedWindowRateLimiter {
 	return &FixedWindowRateLimiter{
-		clients: make(map[string]int),
+		clients: make(map[string]*clientWindow),
 		limit:   limit,
 		window:  window,
 	}
 }
 
-func (rl *FixedWindowRateLimiter) Allow(ip string) (bool, time.Duration) {
-	rl.RLock()
-	count, exist := rl.clients[ip]
-	rl.RUnlock()
+func (rl *FixedWindowRateLimiter) Allow(ctx context.Context, ip string) (bool, time.Duration) {
+	rl.Lock()
+	defer rl.Unlock()
 
-	if !exist || count < rl.limit {
-		rl.Lock()
-		if !exist {
-			go rl.resetCount(ip)
+	now := time.Now()
+	client, exist := rl.clients[ip]
+	if !exist || now.Sub(client.lastReset) >= rl.window {
+		rl.clients[ip] = &clientWindow{
+			count:     1,
+			lastReset: now,
 		}
-
-		rl.clients[ip]++
-		rl.Unlock()
 		return true, 0
-
 	}
 
-	return false, rl.window
-}
+	if client.count < rl.limit {
+		client.count++
+		return true, 0
+	}
 
-func (rl *FixedWindowRateLimiter) resetCount(ip string) {
-	time.Sleep(rl.window)
-	rl.Lock()
-	delete(rl.clients, ip)
-	rl.Unlock()
+	retryAfter := rl.window - now.Sub(client.lastReset)
+	if retryAfter < 0 {
+		retryAfter = 0
+	}
+
+	return false, retryAfter
 }

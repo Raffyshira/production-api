@@ -109,10 +109,21 @@ func main() {
 	}
 
 	// rate limiter
-	rateLimiter := ratelimiter.NewFixedWindowRateLimiter(
-		cfg.rateLimiter.RequestsPerTimeFrame,
-		cfg.rateLimiter.TimeFrame,
-	)
+	var rateLimiter ratelimiter.Limiter
+	if cfg.redisCfg.enabled && rdb != nil {
+		rateLimiter = ratelimiter.NewRedisSlidingWindowLimiter(
+			rdb,
+			cfg.rateLimiter.RequestsPerTimeFrame,
+			cfg.rateLimiter.TimeFrame,
+		)
+		logger.Info("redis sliding window rate limiter initialized")
+	} else {
+		rateLimiter = ratelimiter.NewFixedWindowRateLimiter(
+			cfg.rateLimiter.RequestsPerTimeFrame,
+			cfg.rateLimiter.TimeFrame,
+		)
+		logger.Info("in-memory fixed window rate limiter initialized")
+	}
 
 	store := store.NewStorage(db)
 	cacheStorage := cache.NewRedisStorage(rdb)

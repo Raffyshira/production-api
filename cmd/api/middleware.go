@@ -180,7 +180,7 @@ func (app *application) RateLimiterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if app.config.rateLimiter.Enabled {
 			clientIP := app.getClientIP(r)
-			if allow, retryAfter := app.rateLimiter.Allow(clientIP); !allow {
+			if allow, retryAfter := app.rateLimiter.Allow(r.Context(), clientIP); !allow {
 				app.rateLimitExceededResponse(w, r, retryAfter.String())
 				return
 			}
