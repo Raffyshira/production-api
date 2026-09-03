@@ -138,6 +138,7 @@ func main() {
 
 	svcDependencies := service.ServiceDependencies{
 		Store:  store,
+		Cache:  cacheStorage,
 		Mailer: mailer,
 		Logger: logger,
 		Config: service.Config{

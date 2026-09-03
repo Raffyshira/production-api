@@ -32,6 +32,7 @@ func newTestApplication(t *testing.T, cfg config) *application {
 
 	services := service.NewServices(service.ServiceDependencies{
 		Store: mockStore,
+		Cache: mockCacheStore,
 	})
 
 	return &application{

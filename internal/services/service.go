@@ -5,6 +5,7 @@ import (
 
 	"github.com/raffyshira/project-rest-api/internal/mailer"
 	"github.com/raffyshira/project-rest-api/internal/store"
+	"github.com/raffyshira/project-rest-api/internal/store/cache"
 	"go.uber.org/zap"
 )
 
@@ -22,6 +23,7 @@ type Config struct {
 
 type ServiceDependencies struct {
 	Store  store.Storage
+	Cache  cache.Storage
 	Mailer mailer.Client
 	Logger *zap.SugaredLogger
 	Config Config
@@ -31,6 +33,6 @@ func NewServices(deps ServiceDependencies) Services {
 	return Services{
 		Auth:  NewAuthService(deps.Store, deps.Mailer, deps.Logger, deps.Config),
 		Users: NewUserService(deps.Store),
-		Posts: NewPostsService(deps.Store),
+		Posts: NewPostsService(deps.Store, deps.Cache),
 	}
 }
