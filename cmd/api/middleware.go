@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -157,10 +158,29 @@ func (app *application) getUser(ctx context.Context, userID int64) (*store.User,
 	return user, nil
 }
 
+func (app *application) getClientIP(r *http.Request) string {
+	if xRealIP := r.Header.Get("X-Real-IP"); xRealIP != "" {
+		return strings.TrimSpace(xRealIP)
+	}
+
+	if xForwardedFor := r.Header.Get("X-Forwarded-For"); xForwardedFor != "" {
+		parts := strings.Split(xForwardedFor, ",")
+		return strings.TrimSpace(parts[0])
+	}
+
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+
+	return host
+}
+
 func (app *application) RateLimiterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if app.config.rateLimiter.Enabled {
-			if allow, retryAfter := app.rateLimiter.Allow(r.RemoteAddr); !allow {
+			clientIP := app.getClientIP(r)
+			if allow, retryAfter := app.rateLimiter.Allow(clientIP); !allow {
 				app.rateLimitExceededResponse(w, r, retryAfter.String())
 				return
 			}
