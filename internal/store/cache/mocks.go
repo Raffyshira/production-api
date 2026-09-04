@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"time"
 
 	"github.com/raffyshira/project-rest-api/internal/store"
 	"github.com/stretchr/testify/mock"
@@ -9,8 +10,9 @@ import (
 
 func NewMockStore() Storage {
 	return Storage{
-		Users: &MockUserStore{},
-		Posts: &MockPostStore{},
+		Users:  &MockUserStore{},
+		Posts:  &MockPostStore{},
+		Tokens: &MockTokenStore{},
 	}
 }
 
@@ -20,7 +22,10 @@ type MockUserStore struct {
 
 func (s *MockUserStore) Get(ctx context.Context, userID int64) (*store.User, error) {
 	args := s.Called(userID)
-	return nil, args.Error(1)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*store.User), args.Error(1)
 }
 
 func (s *MockUserStore) Set(ctx context.Context, user *store.User) error {
@@ -68,4 +73,18 @@ func (s *MockPostStore) SetComments(ctx context.Context, postID int64, comments 
 
 func (s *MockPostStore) DeleteComments(ctx context.Context, postID int64) {
 	s.Called(postID)
+}
+
+type MockTokenStore struct {
+	mock.Mock
+}
+
+func (s *MockTokenStore) Blacklist(ctx context.Context, jti string, ttl time.Duration) error {
+	args := s.Called(jti, ttl)
+	return args.Error(0)
+}
+
+func (s *MockTokenStore) IsBlacklisted(ctx context.Context, jti string) (bool, error) {
+	args := s.Called(jti)
+	return args.Bool(0), args.Error(1)
 }

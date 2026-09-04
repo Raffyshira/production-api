@@ -22,7 +22,7 @@ export const SinglePost = () => {
   if (error)
     return (
       <div className="flex h-screen items-center justify-center text-muted-foreground">
-        Failed to load post.
+        <p>Gagal memuat postingan.</p>
       </div>
     );
 

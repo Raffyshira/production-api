@@ -10,6 +10,7 @@ import (
 	service "github.com/raffyshira/project-rest-api/internal/services"
 	"github.com/raffyshira/project-rest-api/internal/store"
 	"github.com/raffyshira/project-rest-api/internal/store/cache"
+	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
 )
 
@@ -21,6 +22,8 @@ func newTestApplication(t *testing.T, cfg config) *application {
 	// logger := zap.Must(zap.NewProduction()).Sugar()
 	mockStore := store.NewMockStore()
 	mockCacheStore := cache.NewMockStore()
+	mockTokenStore := mockCacheStore.Tokens.(*cache.MockTokenStore)
+	mockTokenStore.On("IsBlacklisted", mock.Anything).Return(false, nil).Maybe()
 
 	testAuth := &auth.TestAuthenticator{}
 

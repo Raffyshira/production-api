@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"time"
 
 	"github.com/raffyshira/project-rest-api/internal/store"
 	"github.com/redis/go-redis/v9"
@@ -21,11 +22,16 @@ type Storage struct {
 		SetComments(context.Context, int64, []store.Comment) error
 		DeleteComments(context.Context, int64)
 	}
+	Tokens interface {
+		Blacklist(context.Context, string, time.Duration) error
+		IsBlacklisted(context.Context, string) (bool, error)
+	}
 }
 
 func NewRedisStorage(rbd *redis.Client) Storage {
 	return Storage{
-		Users: &UserStore{rdb: rbd},
-		Posts: &PostStore{rdb: rbd},
+		Users:  &UserStore{rdb: rbd},
+		Posts:  &PostStore{rdb: rbd},
+		Tokens: &TokenStore{rdb: rbd},
 	}
 }

@@ -185,6 +185,27 @@ info:
   termsOfService: http://swagger.io/terms/
   title: SocialNetwork API
 paths:
+  /authentication/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logs out a user by blacklisting the JWT in Redis
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Logs out a user and revokes token
+      tags:
+      - authentication
   /authentication/token:
     post:
       consumes:

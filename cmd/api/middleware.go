@@ -37,6 +37,17 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 
 		claims, _ := jwtToken.Claims.(jwt.MapClaims)
 
+		// Check if token has been revoked / blacklisted
+		if jti, ok := claims["jti"].(string); ok && jti != "" {
+			if app.cacheStorage.Tokens != nil {
+				blacklisted, err := app.cacheStorage.Tokens.IsBlacklisted(r.Context(), jti)
+				if err == nil && blacklisted {
+					app.unauthorizedErrorResponse(w, r, fmt.Errorf("token has been revoked"))
+					return
+				}
+			}
+		}
+
 		userID, err := strconv.ParseInt(fmt.Sprintf("%.f", claims["sub"]), 10, 64)
 		if err != nil {
 			app.unauthorizedErrorResponse(w, r, err)
@@ -52,8 +63,18 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 		}
 
 		ctx = context.WithValue(ctx, userCtx, user)
+		ctx = context.WithValue(ctx, tokenClaimsCtx, claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+type tokenClaimsKey string
+
+const tokenClaimsCtx tokenClaimsKey = "tokenClaims"
+
+func getTokenClaimsFromCtx(r *http.Request) jwt.MapClaims {
+	claims, _ := r.Context().Value(tokenClaimsCtx).(jwt.MapClaims)
+	return claims
 }
 
 func (app *application) BasicAuthMiddleware() func(http.Handler) http.Handler {

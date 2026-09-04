@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/raffyshira/project-rest-api/internal/store"
 )
 
@@ -113,6 +114,7 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 
 	claims := jwt.MapClaims{
 		"sub": user.ID,
+		"jti": uuid.New().String(),
 		"exp": time.Now().Add(app.config.auth.token.exp).Unix(),
 		"iat": time.Now().Unix(),
 		"nbf": time.Now().Unix(),
@@ -128,4 +130,47 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 	if err := app.jsonResponse(w, http.StatusCreated, token); err != nil {
 		app.internalServerError(w, r, err)
 	}
+}
+
+// logoutHandler godoc
+//
+//	@Summary		Logs out a user and revokes token
+//	@Description	Logs out a user by blacklisting the JWT in Redis
+//	@Tags			authentication
+//	@Accept			json
+//	@Produce		json
+//	@Success		204
+//	@Failure		401	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/authentication/logout [post]
+func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
+	claims := getTokenClaimsFromCtx(r)
+	if claims == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	jti, _ := claims["jti"].(string)
+
+	var expSec int64
+	switch v := claims["exp"].(type) {
+	case float64:
+		expSec = int64(v)
+	case int64:
+		expSec = v
+	}
+
+	if jti != "" && expSec > 0 {
+		expTime := time.Unix(expSec, 0)
+		ttl := time.Until(expTime)
+		if ttl > 0 && app.cacheStorage.Tokens != nil {
+			if err := app.cacheStorage.Tokens.Blacklist(r.Context(), jti, ttl); err != nil {
+				app.internalServerError(w, r, err)
+				return
+			}
+		}
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

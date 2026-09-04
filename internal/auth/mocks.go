@@ -14,6 +14,7 @@ var testClaims = jwt.MapClaims{
 	"aud": "test-aud",
 	"iss": "test-aud",
 	"sub": int64(1),
+	"jti": "mock-test-jti",
 	"exp": time.Now().Add(time.Hour).Unix(),
 }
 
